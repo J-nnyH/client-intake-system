@@ -1,0 +1,88 @@
+const Client = require ('../models/Client.js')
+console.log('Client import:', Client);
+
+module.exports={
+    getIndex: async (req, res) => {
+        try {
+          const clients = await Client.find().sort({ createdAt: -1 });
+          console.log(clients);
+          res.json(clients);
+        } catch (err) {
+          console.error(err);
+          res.status(500).json({ message: 'Error fetching clients' });
+        }
+    },
+
+    create: async(req,res)=> {
+        // Creates a new Client and inserts it into database
+        try {
+            const { name, surname, email, status, note} = req.body;
+
+            if (!email || !status) {
+                return res.status(400).json({ message: "Email and status required" });
+            }
+
+            const client = await Client.create({
+                surname,
+                name,
+                email: email.trim().toLowerCase(),
+                status,
+                note,
+            });
+
+            res.status(201).json(client);
+        }
+        catch(err){
+            if (err.code === 11000) {
+                return res.status(409).json({ message: "Email already exists" });
+              }
+            res.status(500).json({ message: err.message });
+        }
+    },
+
+    delete: async(req,res)=> {
+        try{       
+            const deleted = await Client.findByIdAndDelete(req.params.id);
+            if (!deleted) {
+                return res.status(404).json({ message: "Client not found" });
+            }
+            console.log('Deleted One client:', deleted);
+            res.status(200).json(deleted);
+        } catch(err){
+            res.status(500).json({ error: err.message });
+        }  
+    },
+
+    update: async (req, res) => {
+        try {
+            const { id } = req.params;
+
+            if (!req.body.email || !req.body.status) {
+                return res.status(400).json({ message: "Email and status are required" });
+            }
+              
+            const updateData = { ...req.body };
+
+            if (updateData.email) {
+            updateData.email = updateData.email.trim().toLowerCase();
+            }
+
+            const updated = await Client.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true, runValidators: true }
+            );  
+      
+            if (!updated) {
+            return res.status(404).json({ message: "Client not found" });
+            }
+            res.status(200).json(updated);
+        } catch (err) {
+            if (err.code === 11000) {
+                return res.status(409).json({ message: "Email already exists" });
+              }
+            res.status(500).json({ error: err.message });
+        }
+      }
+    
+}
