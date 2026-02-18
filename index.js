@@ -6,7 +6,7 @@ const cors = require('cors');
 
 // app.use(cors({ origin: 'http://localhost:5173' }));
 
-app.use(cors({ origin: 'https://client-intake-system.netlify.app/'}));
+app.use(cors({ origin: 'https://client-intake-system.netlify.app'}));
 
 //Use .env file in config folder
 require("dotenv").config({ path: "./config/.env" });
