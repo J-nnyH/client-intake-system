@@ -1,11 +1,11 @@
 const mongoose = require ('mongoose');
 const { Schema, model } = mongoose;
 const ClientSchema = new Schema({
-  surname: String,
-  name: String,
+  surname: { type: String },
+  name: { type: String },
   email: { type: String, required: true, unique: true },
   status: { type: String, required: true},
-  note: String,
+  note: { type: String }
 }, {
   timestamps: true
 });
