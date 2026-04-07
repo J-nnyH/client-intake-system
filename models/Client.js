@@ -5,7 +5,8 @@ const ClientSchema = new Schema({
   name: { type: String },
   email: { type: String, required: true, unique: true },
   status: { type: String, required: true},
-  note: { type: String }
+  note: { type: String },
+  owner: {type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 }, {
   timestamps: true
 });
