@@ -1,11 +1,9 @@
 const Client = require ('../models/Client.js')
-console.log('Client import:', Client);
 
 module.exports={
     getIndex: async (req, res) => {
         try {
           const clients = await Client.find({owner: req.user.id}).sort({ createdAt: -1 }).select('-owner');
-          console.log(clients);
           res.json(clients);
         } catch (err) {
           console.error(err);
@@ -21,15 +19,22 @@ module.exports={
             if (!email || !status) {
                 return res.status(400).json({ message: "Email and status required" });
             }
-
-            const client = await Client.create({
-                surname,
-                name,
+            const isGuest = req.user.role === 'guest';
+            
+            const clientObj = {
+                surname: surname?.trim(),
+                name: name?.trim(),
                 email: email.trim().toLowerCase(),
                 status,
-                note,
+                note: note?.trim(),
                 owner: req.user.id
-            });
+            };
+            
+            if (isGuest) {
+                clientObj.expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24h
+            }
+            
+            const client = await Client.create(clientObj);
 
             const safeClient = client.toObject();
             delete safeClient.owner;
@@ -51,7 +56,6 @@ module.exports={
             }
             const safeDeleted = deleted.toObject();
             delete safeDeleted.owner;
-            console.log('Deleted One client:', deleted);
             res.status(200).json(safeDeleted);
         } catch(err){
             res.status(500).json({ error: err.message });

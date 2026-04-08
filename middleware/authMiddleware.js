@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
-const authMiddleware = (req, res, next)=> {
+const authMiddleware = async(req, res, next)=> {
     try{
         const token = req.cookies.token;
 
@@ -10,7 +11,11 @@ const authMiddleware = (req, res, next)=> {
 
         const payload=jwt.verify(token, process.env.JWT_SECRET);
 
-        req.user = {id : payload.userId}
+        const user= await User.findById(payload.userId).select('-password');
+
+        if (!user) return res.status(401).json({ message: 'User not found' });
+
+        req.user= user;
 
         next()
     }catch(err){

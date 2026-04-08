@@ -31,13 +31,53 @@ module.exports = {
                 password: hashedPassword
             });
 
-            res.status(201).json({ message: "User registered successfully" });
+            const token = jwt.sign({ 
+                userId: user._id }, 
+                process.env.JWT_SECRET, 
+                { expiresIn: '1d' });
+
+            res.cookie('token', token, cookieOptions);
+
+            res.status(201).json({ user: { id: user._id, email: user.email, name: user.name, surname: user.surname }, message: "User registered successfully" });
         } catch (err) {
             if (err.code === 11000) {
             return res.status(409).json({ message: "Email already exists" });
             }
             res.status(500).json({ message: err.message });
         }
+    },
+
+    guest: async(req, res) => {
+        try{
+            const guest= {
+                name: 'Guest',
+                surname: 'User',
+                email: `guest_${Date.now()}@guest.local`,
+                password: 'random',
+                role:'guest',
+                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+            }
+
+            const guestUser = await User.create(guest);
+
+            const token = jwt.sign({ 
+                userId: guestUser._id }, 
+                process.env.JWT_SECRET, 
+                { expiresIn: '1d' });
+
+            res.cookie('token', token, cookieOptions);
+
+            // res.json({ token });
+            res.status(200).json({
+                message: "Logged in",
+                user: { 
+                    id: guestUser._id,
+                    email: guestUser.email,
+                    name: guestUser.name,
+                    surname: guestUser.surname}});
+            }catch(err){
+                res.status(500).json({message: err.message})
+            }
     },
 
     login: async (req, res) => {
@@ -68,18 +108,28 @@ module.exports = {
             // res.json({ token });
             res.status(200).json({
                 message: "Logged in",
-                user: { id: user._id, email: user.email }
+                user: { id: user._id, email: user.email,name: user.name, surname: user.surname}
             });
         } catch (err) {
             res.status(500).json({ message: err.message });
         }
     },
-    logout: async (req,res) => {
+    logout: async (req, res) => {
         try {
             res.clearCookie('token', cookieOptions);
 
             res.status(200).json({message:"Logged out"})
         } catch (err) {
+            res.status(500).json({ message: err.message });
+        }
+    },
+    me: async (req, res) => {
+        try{
+            res.status(200).json({
+                message: "Logged in",
+                user: req.user
+            });
+        }catch(err){
             res.status(500).json({ message: err.message });
         }
     }

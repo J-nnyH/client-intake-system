@@ -11,6 +11,9 @@ require("dotenv").config({ path: "./config/.env" });
 
 const isProduction = process.env.NODE_ENV === 'production';
 const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+const allowedOrigins = isProduction
+    ? [clientOrigin]
+    : [clientOrigin, 'http://localhost:5173'];
 
 if (!process.env.DB_STRING) {
     throw new Error('Missing DB_STRING in config/.env');
@@ -23,7 +26,13 @@ if (!process.env.JWT_SECRET) {
 // app.use(cors({ origin: 'http://localhost:5173' }));
 
 app.use(cors({ 
-    origin: clientOrigin,
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        return callback(new Error('Not allowed by CORS'));
+    },
     credentials: true
 }));
 
