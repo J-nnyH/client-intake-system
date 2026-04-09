@@ -9,11 +9,8 @@ const cookieParser = require('cookie-parser');
 //Use .env file in config folder
 require("dotenv").config({ path: "./config/.env" });
 
-const isProduction = process.env.NODE_ENV === 'production';
+// const isProduction = process.env.NODE_ENV === 'production';
 const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
-const allowedOrigins = isProduction
-    ? [clientOrigin]
-    : [clientOrigin, 'http://localhost:5173'];
 
 if (!process.env.DB_STRING) {
     throw new Error('Missing DB_STRING in config/.env');
@@ -23,16 +20,8 @@ if (!process.env.JWT_SECRET) {
     throw new Error('Missing JWT_SECRET in config/.env');
 }
 
-// app.use(cors({ origin: 'http://localhost:5173' }));
-
 app.use(cors({ 
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-
-        return callback(new Error('Not allowed by CORS'));
-    },
+    origin: clientOrigin,
     credentials: true
 }));
 

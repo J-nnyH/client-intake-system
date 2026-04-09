@@ -1,18 +1,18 @@
 # Client Management API
 
-Simple REST API for managing client data.
+Backend for managing clients and user authentication.
 
 Built with **Node.js**, **Express**, and **MongoDB (Mongoose)**.  
 This project demonstrates CRUD operations, API routing, and database integration.
 
 ## Features
 
-- Create clients
-- Retrieve all clients
-- Update existing clients
-- Delete clients
+- Create, retrieve, update, delete clients (CRUD)
 - Email uniqueness validation
 - Basic request validation
+- User authentication & registration (JWT, HTTP-only cookies)
+- Guest accounts with automatic cleanup via MongoDB TTL indexes
+- Protected routes based on auth status
 
 ## Tech Stack
 
@@ -20,22 +20,40 @@ This project demonstrates CRUD operations, API routing, and database integration
 - Express
 - MongoDB
 - Mongoose
+- JWT Auth
 - dotenv
 - cors
 
 ## API Endpoints
 
+Auth:
+
+POST `/api/auth/register`  
+User registration
+
+POST `/api/auth/login`  
+User login
+
+POST `/api/auth/guest`  
+Temporary guest login
+
+POST `/api/auth/logout`  
+User Logout
+
+
+Clients:
+
 GET `/api/`  
-Returns all clients.
+Returns all clients
 
 POST `/api/create`  
-Creates a new client.
+Creates a new client
 
 PUT `/api/update/:id`  
-Updates an existing client.
+Updates an existing client
 
 DELETE `/api/delete/:id`  
-Deletes a client.
+Deletes a client
 
 ## Environment Variables
 
@@ -66,7 +84,8 @@ npm start
 
 Possible improvements for the project:
 
-- Authentication (JWT)
+- Rate Limitingto prevent brute-force attacks and abuse
+- Refresh Tokens for Sessions
 - Pagination for client lists
 - Input validation library (Joi / Zod)
 - API documentation with Swagger
@@ -80,3 +99,4 @@ This project was created as a portfolio backend project to practice:
 - Express routing
 - MongoDB data modeling
 - Backend project structure
+- Authentication & session management

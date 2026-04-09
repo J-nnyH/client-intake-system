@@ -32,40 +32,44 @@ module.exports = {
             });
 
             const token = jwt.sign({ 
-                userId: user._id }, 
+                userId: user._id, 
+                role: user.role}, 
                 process.env.JWT_SECRET, 
                 { expiresIn: '1d' });
 
-            res.cookie('token', token, cookieOptions);
+            res.cookie('token', token, {...cookieOptions, maxAge: 1000 * 60 * 60 * 24});
 
             res.status(201).json({ user: { id: user._id, email: user.email, name: user.name, surname: user.surname }, message: "User registered successfully" });
         } catch (err) {
             if (err.code === 11000) {
             return res.status(409).json({ message: "Email already exists" });
             }
-            res.status(500).json({ message: err.message });
+            console.error('Register failed:', err);
+            res.status(500).json({message: 'Error registering user' });
         }
     },
 
     guest: async(req, res) => {
         try{
+            const hashedPassword = await bcrypt.hash('random', 10);  
             const guest= {
                 name: 'Guest',
                 surname: 'User',
                 email: `guest_${Date.now()}@guest.local`,
-                password: 'random',
-                role:'guest',
+                password: hashedPassword,
+                role: 'guest',
                 expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
             }
 
             const guestUser = await User.create(guest);
 
             const token = jwt.sign({ 
-                userId: guestUser._id }, 
+                userId: guestUser._id,
+                role: guestUser.role}, 
                 process.env.JWT_SECRET, 
                 { expiresIn: '1d' });
 
-            res.cookie('token', token, cookieOptions);
+            res.cookie('token', token, {...cookieOptions, maxAge: 1000 * 60 * 60 * 24});
 
             // res.json({ token });
             res.status(200).json({
@@ -76,7 +80,8 @@ module.exports = {
                     name: guestUser.name,
                     surname: guestUser.surname}});
             }catch(err){
-                res.status(500).json({message: err.message})
+                console.error('Guest login failed:', err);
+                res.status(500).json({message: 'Error logging in as guest'})
             }
     },
 
@@ -111,16 +116,31 @@ module.exports = {
                 user: { id: user._id, email: user.email,name: user.name, surname: user.surname}
             });
         } catch (err) {
-            res.status(500).json({ message: err.message });
+            console.error('Login failed:', err);
+            res.status(500).json({ message: 'Error logging in' });
         }
     },
     logout: async (req, res) => {
         try {
+            const token = req.cookies.token 
+
+            if(token){
+                try{
+                    const payload = jwt.verify(token, process.env.JWT_SECRET)
+                    if(payload.role === 'guest'){
+                        await User.deleteOne({_id: payload.userId});
+                    }
+                }catch(err){
+                        console.error('Guest cleanup failed during logout:', err)
+                }
+            }
+
             res.clearCookie('token', cookieOptions);
 
-            res.status(200).json({message:"Logged out"})
+            res.status(200).json({message: "Logged out" })
         } catch (err) {
-            res.status(500).json({ message: err.message });
+            console.error('Logout failed:', err);
+            res.status(500).json({ message: 'Error logging out' });
         }
     },
     me: async (req, res) => {
@@ -130,7 +150,8 @@ module.exports = {
                 user: req.user
             });
         }catch(err){
-            res.status(500).json({ message: err.message });
+            console.error('Fetch current user failed:', err);
+            res.status(500).json({ message: 'Error fetching current user' });
         }
     }
 }
