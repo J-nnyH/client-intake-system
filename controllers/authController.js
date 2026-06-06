@@ -145,9 +145,10 @@ module.exports = {
     },
     me: async (req, res) => {
         try{
+            const { _id, email, name, surname, role } = req.user;
             res.status(200).json({
                 message: "Logged in",
-                user: req.user
+                user: { id: _id, email, name, surname, role }
             });
         }catch(err){
             console.error('Fetch current user failed:', err);
